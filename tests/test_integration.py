@@ -2,7 +2,6 @@
 # Integration tests — require real ANTHROPIC_API_KEY and k3d cluster
 # Run with: make test-int
 
-import os
 
 import pytest
 

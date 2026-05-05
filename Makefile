@@ -111,7 +111,7 @@ dashboard: ## Open Grafana in browser
 # ─── Linting ──────────────────────────────────────────────────────────────────
 lint: ## Run flake8 + black check
 	@echo -e "$(GREEN)[make lint]$(NC) Running linters..."
-	$(VENV)/bin/flake8 src/ tests/ --max-line-length=100 --ignore=E501
+	$(VENV)/bin/flake8 src/ tests/ --max-line-length=100 --ignore=E501,W503
 	$(VENV)/bin/black --check src/ tests/
 
 format: ## Format code with black

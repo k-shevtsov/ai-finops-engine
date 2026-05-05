@@ -16,23 +16,23 @@ TELEGRAM_API = "https://api.telegram.org/bot{token}/sendMessage"
 # Severity → emoji mapping
 SEVERITY_EMOJI = {
     "critical": "🔴",
-    "high":     "🟠",
-    "medium":   "🟡",
-    "low":      "🟢",
-    "none":     "⚪",
+    "high": "🟠",
+    "medium": "🟡",
+    "low": "🟢",
+    "none": "⚪",
 }
 
 ANOMALY_EMOJI = {
-    "over_provisioned":  "💸",
+    "over_provisioned": "💸",
     "under_provisioned": "⚡",
-    "memory_leak":       "🧠",
-    "cpu_spike":         "📈",
+    "memory_leak": "🧠",
+    "cpu_spike": "📈",
 }
 
 MODE_EMOJI = {
-    "AUTO":    "🤖",
+    "AUTO": "🤖",
     "SUGGEST": "💡",
-    "MANUAL":  "👤",
+    "MANUAL": "👤",
 }
 
 

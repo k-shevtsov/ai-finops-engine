@@ -2,11 +2,10 @@
 # kopf-based Kubernetes operator for FinOpsRecommendation CRD
 # Watches CRD events and applies rightsizing recommendations automatically
 
-import json
 import logging
 import os
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Optional
 
 import kopf
 import kubernetes
@@ -91,8 +90,7 @@ def handle_recommendation_created(spec: dict, name: str, namespace: str, **kwarg
 
 
 @kopf.on.update(GROUP, VERSION, PLURAL)
-def handle_recommendation_updated(spec: dict, name: str, namespace: str,
-                                   old: dict, new: dict, **kwargs):
+def handle_recommendation_updated(spec, name, namespace, old, new, **kwargs):
     """Handle updates to existing FinOpsRecommendation."""
     logger.info("FinOpsRecommendation updated: %s/%s", namespace, name)
 
@@ -162,7 +160,6 @@ def _handle_suggest_mode(
     """SUGGEST mode: create GitHub Issue with recommendation."""
     deployment = spec.get("deployment", "")
     saving = spec.get("analysis", {}).get("monthly_saving_usd", 0.0)
-    explanation = spec.get("analysis", {}).get("explanation", "")
 
     issue_title = f"[FinOps] {deployment}: {anomaly_type} — save ${saving:.2f}/month"
     logger.info("SUGGEST mode: would create GitHub Issue — %s", issue_title)

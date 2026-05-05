@@ -2,12 +2,10 @@
 # Unit tests for src/model.py
 # No real cluster or API calls required
 
-import numpy as np
 import pytest
 
 from src.collector import ContainerMetrics
 from src.model import (
-    ANOMALY_SCORE_THRESHOLD,
     AnomalyResult,
     AnomalyType,
     ResourceAnomalyDetector,

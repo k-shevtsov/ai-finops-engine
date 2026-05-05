@@ -2,7 +2,7 @@
 # Unit tests for src/operator.py
 # All Kubernetes API calls are mocked — no real cluster required
 
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 import kubernetes
 
@@ -10,8 +10,6 @@ import pytest
 
 import src.operator as operator_module
 from src.operator import (
-    _handle_auto_mode,
-    _handle_manual_mode,
     _handle_suggest_mode,
     apply_rightsizing,
     handle_recommendation_created,
