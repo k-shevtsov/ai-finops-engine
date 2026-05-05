@@ -22,11 +22,11 @@ class TestAgentIntegration:
             container="nginx",
             pod="waste-demo-1-abc",
             cpu_usage_cores=0.015,
-            memory_usage_bytes=30 * 1024 ** 2,
+            memory_usage_bytes=30 * 1024**2,
             cpu_request_cores=0.200,
             cpu_limit_cores=2.000,
-            memory_request_bytes=256 * 1024 ** 2,
-            memory_limit_bytes=1024 * 1024 ** 2,
+            memory_request_bytes=256 * 1024**2,
+            memory_limit_bytes=1024 * 1024**2,
             cpu_utilization=0.075,
             memory_utilization=0.117,
             cpu_limit_ratio=10.0,
@@ -54,7 +54,9 @@ class TestAgentIntegration:
         rec = agent.analyze(metrics, anomaly)
 
         # Structural checks
-        assert rec.cpu_request.endswith("m") or rec.cpu_request.replace(".", "").isdigit()
+        assert (
+            rec.cpu_request.endswith("m") or rec.cpu_request.replace(".", "").isdigit()
+        )
         assert rec.memory_request.endswith(("Mi", "Gi"))
         assert 0.0 <= rec.confidence <= 1.0
         assert rec.risk in ("low", "medium", "high")
@@ -63,13 +65,18 @@ class TestAgentIntegration:
 
         # Safety floor check
         from src.agent import CPU_REQUEST_MIN_CORES, MEMORY_REQUEST_MIN_BYTES
+
         cpu_val = agent._parse_resource_value(rec.cpu_request, "cpu")
         mem_val = agent._parse_resource_value(rec.memory_request, "memory")
         assert cpu_val >= CPU_REQUEST_MIN_CORES
         assert mem_val >= MEMORY_REQUEST_MIN_BYTES
 
-        print(f"\n  Recommendation: CPU {rec.cpu_request}/{rec.cpu_limit}, "
-              f"MEM {rec.memory_request}/{rec.memory_limit}")
-        print(f"  Saving: ${rec.monthly_saving_usd:.2f}/mo  "
-              f"Confidence: {rec.confidence:.0%}  Risk: {rec.risk}")
+        print(
+            f"\n  Recommendation: CPU {rec.cpu_request}/{rec.cpu_limit}, "
+            f"MEM {rec.memory_request}/{rec.memory_limit}"
+        )
+        print(
+            f"  Saving: ${rec.monthly_saving_usd:.2f}/mo  "
+            f"Confidence: {rec.confidence:.0%}  Risk: {rec.risk}"
+        )
         print(f"  Root cause: {rec.root_cause}")

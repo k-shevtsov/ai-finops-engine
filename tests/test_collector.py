@@ -13,6 +13,7 @@ from src.collector import ContainerMetrics, MetricsCollector, PrometheusClient
 
 # ─── PrometheusClient tests ───────────────────────────────────────────────────
 
+
 class TestPrometheusClient:
 
     def test_query_returns_results_on_success(self):
@@ -22,10 +23,16 @@ class TestPrometheusClient:
             "status": "success",
             "data": {
                 "result": [
-                    {"metric": {"namespace": "default", "pod": "p1", "container": "c1"},
-                     "value": [1234567890, "0.015"]}
+                    {
+                        "metric": {
+                            "namespace": "default",
+                            "pod": "p1",
+                            "container": "c1",
+                        },
+                        "value": [1234567890, "0.015"],
+                    }
                 ]
-            }
+            },
         }
         mock_response.raise_for_status = MagicMock()
 
@@ -65,10 +72,16 @@ class TestPrometheusClient:
             "status": "success",
             "data": {
                 "result": [
-                    {"metric": {"namespace": "default", "pod": "pod1", "container": "nginx"},
-                     "value": [0, "0.123"]}
+                    {
+                        "metric": {
+                            "namespace": "default",
+                            "pod": "pod1",
+                            "container": "nginx",
+                        },
+                        "value": [0, "0.123"],
+                    }
                 ]
-            }
+            },
         }
         mock_response.raise_for_status = MagicMock()
 
@@ -85,10 +98,12 @@ class TestPrometheusClient:
             "status": "success",
             "data": {
                 "result": [
-                    {"metric": {"namespace": "ns", "pod": "p", "container": "c"},
-                     "value": [0, "NaN"]}
+                    {
+                        "metric": {"namespace": "ns", "pod": "p", "container": "c"},
+                        "value": [0, "NaN"],
+                    }
                 ]
-            }
+            },
         }
         mock_response.raise_for_status = MagicMock()
 
@@ -101,6 +116,7 @@ class TestPrometheusClient:
 
 # ─── MetricsCollector tests ───────────────────────────────────────────────────
 
+
 class TestMetricsCollector:
 
     def _make_collector(self, mock_client):
@@ -111,9 +127,7 @@ class TestMetricsCollector:
 
     def test_collect_returns_list_of_container_metrics(self):
         mock_client = MagicMock()
-        mock_client.query_value.return_value = {
-            "default/pod-abc/nginx": 0.015
-        }
+        mock_client.query_value.return_value = {"default/pod-abc/nginx": 0.015}
         mock_client.query.return_value = []
 
         collector = self._make_collector(mock_client)
@@ -171,9 +185,7 @@ class TestMetricsCollector:
 
     def test_collect_handles_missing_cpu_request_gracefully(self):
         mock_client = MagicMock()
-        mock_client.query_value.return_value = {
-            "default/pod-abc/nginx": 0.015
-        }
+        mock_client.query_value.return_value = {"default/pod-abc/nginx": 0.015}
         mock_client.query.return_value = []
 
         collector = self._make_collector(mock_client)
@@ -182,11 +194,15 @@ class TestMetricsCollector:
         assert isinstance(results, list)
 
     def test_collect_calculates_cpu_waste_correctly(self, sample_metrics):
-        expected_waste = sample_metrics.cpu_request_cores - sample_metrics.cpu_usage_cores
+        expected_waste = (
+            sample_metrics.cpu_request_cores - sample_metrics.cpu_usage_cores
+        )
         assert sample_metrics.cpu_waste_cores == pytest.approx(expected_waste)
 
     def test_collect_calculates_memory_waste_correctly(self, sample_metrics):
-        expected_waste = sample_metrics.memory_request_bytes - sample_metrics.memory_usage_bytes
+        expected_waste = (
+            sample_metrics.memory_request_bytes - sample_metrics.memory_usage_bytes
+        )
         assert sample_metrics.memory_waste_bytes == pytest.approx(expected_waste)
 
     def test_parse_key_returns_correct_components(self):

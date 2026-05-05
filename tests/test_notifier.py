@@ -80,21 +80,24 @@ class TestTelegramNotifier:
         assert result is True
 
     def test_format_message_contains_deployment_name(self, notifier):
-        msg = notifier._format_message(**{
-            k: v for k, v in SAMPLE_RECOMMENDATION.items() if k != "name"
-        }, name="test-rec")
+        msg = notifier._format_message(
+            **{k: v for k, v in SAMPLE_RECOMMENDATION.items() if k != "name"},
+            name="test-rec"
+        )
         assert "waste-demo-1" in msg
 
     def test_format_message_contains_saving(self, notifier):
-        msg = notifier._format_message(**{
-            k: v for k, v in SAMPLE_RECOMMENDATION.items() if k != "name"
-        }, name="test-rec")
+        msg = notifier._format_message(
+            **{k: v for k, v in SAMPLE_RECOMMENDATION.items() if k != "name"},
+            name="test-rec"
+        )
         assert "11.20" in msg
 
     def test_format_message_shows_applied_status(self, notifier):
-        msg = notifier._format_message(**{
-            k: v for k, v in SAMPLE_RECOMMENDATION.items() if k != "name"
-        }, name="test-rec")
+        msg = notifier._format_message(
+            **{k: v for k, v in SAMPLE_RECOMMENDATION.items() if k != "name"},
+            name="test-rec"
+        )
         assert "Applied" in msg
 
     def test_is_configured_true_when_token_and_chat_set(self, notifier):

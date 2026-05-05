@@ -45,8 +45,12 @@ class TelegramNotifier:
         chat_id: Optional[str] = None,
         timeout: int = 10,
     ):
-        self.token = token if token is not None else os.environ.get("TELEGRAM_TOKEN", "")
-        self.chat_id = chat_id if chat_id is not None else os.environ.get("TELEGRAM_CHAT_ID", "")
+        self.token = (
+            token if token is not None else os.environ.get("TELEGRAM_TOKEN", "")
+        )
+        self.chat_id = (
+            chat_id if chat_id is not None else os.environ.get("TELEGRAM_CHAT_ID", "")
+        )
         self.timeout = timeout
         self._sent_ids: set[str] = set()  # deduplication by recommendation name
 

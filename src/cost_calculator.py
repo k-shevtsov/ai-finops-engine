@@ -10,7 +10,7 @@ from src.collector import ContainerMetrics
 logger = logging.getLogger(__name__)
 
 # Default prices — approximate AWS t3/m5 blended on-demand rates
-DEFAULT_CPU_PRICE_PER_CORE_HOUR = 0.048   # USD per core per hour
+DEFAULT_CPU_PRICE_PER_CORE_HOUR = 0.048  # USD per core per hour
 DEFAULT_MEMORY_PRICE_PER_GB_HOUR = 0.006  # USD per GB per hour
 
 HOURS_PER_MONTH = 730  # 365 * 24 / 12
@@ -85,8 +85,14 @@ class CostCalculator:
         )
 
         # Efficiency score: average of cpu and memory utilization, capped at 1.0
-        cpu_eff = min(1.0, metrics.cpu_utilization) if metrics.cpu_request_cores > 0 else 0.0
-        mem_eff = min(1.0, metrics.memory_utilization) if metrics.memory_request_bytes > 0 else 0.0
+        cpu_eff = (
+            min(1.0, metrics.cpu_utilization) if metrics.cpu_request_cores > 0 else 0.0
+        )
+        mem_eff = (
+            min(1.0, metrics.memory_utilization)
+            if metrics.memory_request_bytes > 0
+            else 0.0
+        )
 
         if metrics.cpu_request_cores > 0 and metrics.memory_request_bytes > 0:
             efficiency_score = (cpu_eff + mem_eff) / 2
@@ -114,7 +120,9 @@ class CostCalculator:
             efficiency_score=round(efficiency_score, 4),
         )
 
-    def calculate_batch(self, metrics_list: list[ContainerMetrics]) -> list[CostBreakdown]:
+    def calculate_batch(
+        self, metrics_list: list[ContainerMetrics]
+    ) -> list[CostBreakdown]:
         """Calculate cost breakdown for a list of containers."""
         results = []
         for m in metrics_list:
@@ -123,7 +131,9 @@ class CostCalculator:
             except Exception as e:
                 logger.warning(
                     "Failed to calculate cost for %s/%s: %s",
-                    m.namespace, m.container, e
+                    m.namespace,
+                    m.container,
+                    e,
                 )
         return results
 
@@ -141,5 +151,5 @@ class CostCalculator:
 
     def _memory_monthly(self, bytes_: float) -> float:
         """Convert memory bytes to monthly USD cost."""
-        gb = bytes_ / (1024 ** 3)
+        gb = bytes_ / (1024**3)
         return gb * self.memory_price_per_gb_hour * HOURS_PER_MONTH

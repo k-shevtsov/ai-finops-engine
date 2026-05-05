@@ -36,7 +36,7 @@ ANOMALY_SCORE = Gauge(
 )
 
 # ─── Config from environment ──────────────────────────────────────────────────
-OPERATOR_MODE = os.environ.get("OPERATOR_MODE", "SUGGEST")          # AUTO|SUGGEST|MANUAL
+OPERATOR_MODE = os.environ.get("OPERATOR_MODE", "SUGGEST")  # AUTO|SUGGEST|MANUAL
 DRY_RUN = os.environ.get("DRY_RUN", "true").lower() == "true"
 CONFIDENCE_THRESHOLD = float(os.environ.get("CONFIDENCE_THRESHOLD", "0.85"))
 MIN_SAVING_USD = float(os.environ.get("MIN_SAVING_USD_FOR_AUTO", "5.0"))
@@ -50,6 +50,7 @@ PLURAL = "finopsrecommendations"
 
 
 # ─── kopf handlers ────────────────────────────────────────────────────────────
+
 
 @kopf.on.create(GROUP, VERSION, PLURAL)
 def handle_recommendation_created(spec: dict, name: str, namespace: str, **kwargs):
@@ -79,8 +80,18 @@ def handle_recommendation_created(spec: dict, name: str, namespace: str, **kwarg
 
     # Decide action based on mode
     if mode == "AUTO":
-        _handle_auto_mode(spec, name, namespace, target_ns, deployment,
-                          confidence, risk, saving, anomaly_type, severity)
+        _handle_auto_mode(
+            spec,
+            name,
+            namespace,
+            target_ns,
+            deployment,
+            confidence,
+            risk,
+            saving,
+            anomaly_type,
+            severity,
+        )
     elif mode == "SUGGEST":
         _handle_suggest_mode(spec, name, namespace, anomaly_type, severity)
     else:  # MANUAL
@@ -96,6 +107,7 @@ def handle_recommendation_updated(spec, name, namespace, old, new, **kwargs):
 
 
 # ─── Mode handlers ────────────────────────────────────────────────────────────
+
 
 def _handle_auto_mode(
     spec: dict,
@@ -129,8 +141,7 @@ def _handle_auto_mode(
     recommended = spec.get("recommended", {})
     if DRY_RUN:
         logger.info(
-            "[DRY_RUN] Would patch %s/%s: %s",
-            target_ns, deployment, recommended
+            "[DRY_RUN] Would patch %s/%s: %s", target_ns, deployment, recommended
         )
         _update_status(name, namespace, "Pending", "DRY_RUN mode — no changes applied")
         return
@@ -140,8 +151,10 @@ def _handle_auto_mode(
         saving_val = spec.get("analysis", {}).get("monthly_saving_usd", 0.0)
         SAVINGS_REALIZED.inc(saving_val)
         _update_status(
-            name, namespace, "Applied",
-            f"Rightsizing applied. Saving: ${saving_val:.2f}/month"
+            name,
+            namespace,
+            "Applied",
+            f"Rightsizing applied. Saving: ${saving_val:.2f}/month",
         )
         RECOMMENDATIONS_TOTAL.labels(anomaly_type, severity, "applied").inc()
         logger.info("Applied rightsizing for %s/%s", target_ns, deployment)
@@ -180,14 +193,14 @@ def _handle_manual_mode(
     saving = spec.get("analysis", {}).get("monthly_saving_usd", 0.0)
 
     logger.info(
-        "MANUAL mode: notification sent for %s — save $%.2f/month",
-        deployment, saving
+        "MANUAL mode: notification sent for %s — save $%.2f/month", deployment, saving
     )
     _update_status(name, namespace, "Pending", "Manual review required")
     RECOMMENDATIONS_TOTAL.labels(anomaly_type, severity, "manual").inc()
 
 
 # ─── Kubernetes actions ───────────────────────────────────────────────────────
+
 
 def apply_rightsizing(
     namespace: str,
@@ -282,6 +295,7 @@ def create_crd_object(
 
 # ─── Status helpers ───────────────────────────────────────────────────────────
 
+
 def _update_status(
     name: str,
     namespace: str,
@@ -303,7 +317,9 @@ def _update_status(
         "status": {
             "phase": phase,
             "message": message,
-            "applied_at": datetime.now(timezone.utc).isoformat() if phase == "Applied" else None,
+            "applied_at": (
+                datetime.now(timezone.utc).isoformat() if phase == "Applied" else None
+            ),
         }
     }
 

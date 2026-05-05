@@ -77,7 +77,9 @@ def mock_client(agent):
 
 class TestFinOpsAgent:
 
-    def test_analyze_returns_finops_recommendation(self, agent, mock_client, sample_metrics):
+    def test_analyze_returns_finops_recommendation(
+        self, agent, mock_client, sample_metrics
+    ):
         mock_client.messages.create.return_value = make_mock_response(
             VALID_RECOMMENDATION_PAYLOAD
         )
@@ -92,14 +94,18 @@ class TestFinOpsAgent:
         result = agent.analyze(sample_metrics, make_anomaly_result())
         assert result.monthly_saving_usd == pytest.approx(11.20)
 
-    def test_analyze_returns_correct_confidence(self, agent, mock_client, sample_metrics):
+    def test_analyze_returns_correct_confidence(
+        self, agent, mock_client, sample_metrics
+    ):
         mock_client.messages.create.return_value = make_mock_response(
             VALID_RECOMMENDATION_PAYLOAD
         )
         result = agent.analyze(sample_metrics, make_anomaly_result())
         assert result.confidence == pytest.approx(0.91)
 
-    def test_analyze_respects_safety_floor_cpu(self, agent, mock_client, sample_metrics):
+    def test_analyze_respects_safety_floor_cpu(
+        self, agent, mock_client, sample_metrics
+    ):
         payload = {**VALID_RECOMMENDATION_PAYLOAD}
         payload["recommendation"] = {**payload["recommendation"], "cpu_request": "5m"}
         mock_client.messages.create.return_value = make_mock_response(payload)
@@ -108,9 +114,14 @@ class TestFinOpsAgent:
         # 5m is below floor of 10m — must be clamped
         assert result.cpu_request == "10m"
 
-    def test_analyze_respects_safety_floor_memory(self, agent, mock_client, sample_metrics):
+    def test_analyze_respects_safety_floor_memory(
+        self, agent, mock_client, sample_metrics
+    ):
         payload = {**VALID_RECOMMENDATION_PAYLOAD}
-        payload["recommendation"] = {**payload["recommendation"], "memory_request": "8Mi"}
+        payload["recommendation"] = {
+            **payload["recommendation"],
+            "memory_request": "8Mi",
+        }
         mock_client.messages.create.return_value = make_mock_response(payload)
 
         result = agent.analyze(sample_metrics, make_anomaly_result())
@@ -138,7 +149,9 @@ class TestFinOpsAgent:
         result = agent.analyze(oom_metrics, anomaly)
         assert result.risk == "high"
 
-    def test_analyze_handles_tool_use_response(self, agent, mock_client, sample_metrics):
+    def test_analyze_handles_tool_use_response(
+        self, agent, mock_client, sample_metrics
+    ):
         # First call returns tool_use, second returns final text
         tool_block = MagicMock()
         tool_block.type = "tool_use"
@@ -205,15 +218,13 @@ class TestFinOpsAgent:
 
     def test_parse_resource_value_memory_mi(self, agent):
         result = agent._parse_resource_value("64Mi", "memory")
-        assert result == pytest.approx(64 * 1024 ** 2)
+        assert result == pytest.approx(64 * 1024**2)
 
     def test_parse_resource_value_memory_gi(self, agent):
         result = agent._parse_resource_value("1Gi", "memory")
-        assert result == pytest.approx(1024 ** 3)
+        assert result == pytest.approx(1024**3)
 
-    def test_tool_get_resource_history_returns_percentiles(
-        self, agent, sample_metrics
-    ):
+    def test_tool_get_resource_history_returns_percentiles(self, agent, sample_metrics):
         result = agent._tool_get_resource_history(sample_metrics)
         assert "cpu_p95_m" in result
         assert "memory_p95_mi" in result

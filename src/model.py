@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 MIN_TRAINING_SAMPLES = 10
 
 # Isolation Forest hyperparameters
-CONTAMINATION = 0.1       # expected fraction of anomalies
+CONTAMINATION = 0.1  # expected fraction of anomalies
 N_ESTIMATORS = 100
 RANDOM_STATE = 42
 
@@ -45,7 +45,7 @@ class AnomalyResult:
     deployment: str
     container: str
 
-    anomaly_score: float          # raw Isolation Forest score (negative = anomaly)
+    anomaly_score: float  # raw Isolation Forest score (negative = anomaly)
     is_anomaly: bool
     anomaly_type: AnomalyType
 
@@ -58,7 +58,7 @@ class AnomalyResult:
     oom_events_24h: int
 
     # Human-readable severity
-    severity: str = "none"        # none | low | medium | high | critical
+    severity: str = "none"  # none | low | medium | high | critical
 
 
 class ResourceAnomalyDetector:
@@ -105,14 +105,17 @@ class ResourceAnomalyDetector:
           4: cpu_throttling_rate   — throttled / total (> 0.1 = under-provisioned)
           5: oom_events_24h        — OOM kill count (> 0 = critical)
         """
-        return np.array([
-            metrics.cpu_utilization,
-            metrics.memory_utilization,
-            metrics.cpu_limit_ratio,
-            metrics.memory_limit_ratio,
-            metrics.cpu_throttling_rate,
-            float(metrics.oom_events_24h),
-        ], dtype=np.float64)
+        return np.array(
+            [
+                metrics.cpu_utilization,
+                metrics.memory_utilization,
+                metrics.cpu_limit_ratio,
+                metrics.memory_limit_ratio,
+                metrics.cpu_throttling_rate,
+                float(metrics.oom_events_24h),
+            ],
+            dtype=np.float64,
+        )
 
     def train(self, metrics_list: list[ContainerMetrics]) -> None:
         """Train Isolation Forest on a batch of container metrics.
@@ -130,7 +133,8 @@ class ResourceAnomalyDetector:
         if len(self._history) < self.min_samples:
             logger.info(
                 "Not enough samples to train: %d / %d",
-                len(self._history), self.min_samples
+                len(self._history),
+                self.min_samples,
             )
             return
 
@@ -150,7 +154,8 @@ class ResourceAnomalyDetector:
 
         logger.info(
             "Isolation Forest trained on %d samples (%d containers)",
-            len(self._history), len(metrics_list)
+            len(self._history),
+            len(metrics_list),
         )
 
     def predict(self, metrics: ContainerMetrics) -> AnomalyResult:
@@ -203,7 +208,9 @@ class ResourceAnomalyDetector:
             severity=severity,
         )
 
-    def predict_batch(self, metrics_list: list[ContainerMetrics]) -> list[AnomalyResult]:
+    def predict_batch(
+        self, metrics_list: list[ContainerMetrics]
+    ) -> list[AnomalyResult]:
         """Predict anomalies for a list of containers."""
         return [self.predict(m) for m in metrics_list]
 

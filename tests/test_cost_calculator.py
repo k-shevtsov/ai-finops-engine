@@ -31,8 +31,8 @@ def zero_usage_metrics():
         memory_usage_bytes=0.0,
         cpu_request_cores=0.500,
         cpu_limit_cores=1.000,
-        memory_request_bytes=512 * 1024 ** 2,
-        memory_limit_bytes=1024 * 1024 ** 2,
+        memory_request_bytes=512 * 1024**2,
+        memory_limit_bytes=1024 * 1024**2,
         cpu_utilization=0.0,
         memory_utilization=0.0,
         cpu_limit_ratio=2.0,
@@ -54,18 +54,22 @@ class TestCostCalculator:
 
     def test_calculate_memory_request_cost_correct(self, calculator, sample_metrics):
         # 256Mi = 0.25 GB * 0.006 * 730 = 1.095 USD
-        gb = (256 * 1024 ** 2) / (1024 ** 3)
+        gb = (256 * 1024**2) / (1024**3)
         expected = gb * 0.006 * HOURS_PER_MONTH
         result = calculator.calculate(sample_metrics)
         assert result.memory_request_cost_monthly == pytest.approx(expected, rel=0.001)
 
-    def test_calculate_waste_is_positive_for_over_provisioned(self, calculator, sample_metrics):
+    def test_calculate_waste_is_positive_for_over_provisioned(
+        self, calculator, sample_metrics
+    ):
         result = calculator.calculate(sample_metrics)
         assert result.cpu_waste_monthly > 0
         assert result.memory_waste_monthly > 0
         assert result.total_waste_monthly > 0
 
-    def test_calculate_waste_is_zero_for_zero_usage(self, calculator, zero_usage_metrics):
+    def test_calculate_waste_is_zero_for_zero_usage(
+        self, calculator, zero_usage_metrics
+    ):
         # zero usage means maximum waste
         result = calculator.calculate(zero_usage_metrics)
         assert result.total_waste_monthly > 0
@@ -83,7 +87,9 @@ class TestCostCalculator:
         result = calculator.calculate(sample_metrics)
         assert 0.0 <= result.efficiency_score <= 1.0
 
-    def test_efficiency_score_low_for_over_provisioned(self, calculator, sample_metrics):
+    def test_efficiency_score_low_for_over_provisioned(
+        self, calculator, sample_metrics
+    ):
         result = calculator.calculate(sample_metrics)
         # CPU utilization 7.5%, memory ~11.7% → efficiency well below 0.2
         assert result.efficiency_score < 0.2
@@ -95,7 +101,9 @@ class TestCostCalculator:
         single = calculator.calculate(sample_metrics).total_waste_monthly
         assert total == pytest.approx(single * 2, rel=0.001)
 
-    def test_total_potential_saving_sums_all_containers(self, calculator, sample_metrics):
+    def test_total_potential_saving_sums_all_containers(
+        self, calculator, sample_metrics
+    ):
         metrics_list = [sample_metrics, sample_metrics]
         breakdowns = calculator.calculate_batch(metrics_list)
         total = calculator.total_potential_saving(breakdowns)
@@ -103,16 +111,14 @@ class TestCostCalculator:
         assert total == pytest.approx(single * 2, rel=0.001)
 
     def test_calculate_batch_skips_bad_metrics_without_raising(self, calculator):
-        bad = ContainerMetrics(
-            namespace="", deployment="", container="", pod=""
-        )
+        bad = ContainerMetrics(namespace="", deployment="", container="", pod="")
         good = ContainerMetrics(
             namespace="default",
             deployment="svc",
             container="app",
             pod="svc-abc",
             cpu_request_cores=0.1,
-            memory_request_bytes=64 * 1024 ** 2,
+            memory_request_bytes=64 * 1024**2,
         )
         results = calculator.calculate_batch([bad, good])
         # bad metrics still produce a CostBreakdown (zeros), no exception

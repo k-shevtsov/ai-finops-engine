@@ -17,11 +17,11 @@ from src.model import AnomalyResult
 logger = logging.getLogger(__name__)
 
 # Safety floors — never recommend below these values
-CPU_REQUEST_MIN_CORES = 0.010       # 10m
-MEMORY_REQUEST_MIN_BYTES = 16 * 1024 ** 2   # 16Mi
+CPU_REQUEST_MIN_CORES = 0.010  # 10m
+MEMORY_REQUEST_MIN_BYTES = 16 * 1024**2  # 16Mi
 
 # Risk threshold — if recommendation reduces limit by more than this → risk=high
-LARGE_REDUCTION_THRESHOLD = 0.50    # 50%
+LARGE_REDUCTION_THRESHOLD = 0.50  # 50%
 
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 
@@ -40,14 +40,14 @@ class FinOpsRecommendation:
     reasoning: str
 
     # Recommended resource values
-    cpu_request: str        # e.g. "50m"
-    cpu_limit: str          # e.g. "200m"
-    memory_request: str     # e.g. "64Mi"
-    memory_limit: str       # e.g. "128Mi"
+    cpu_request: str  # e.g. "50m"
+    cpu_limit: str  # e.g. "200m"
+    memory_request: str  # e.g. "64Mi"
+    memory_limit: str  # e.g. "128Mi"
 
     monthly_saving_usd: float
     confidence: float
-    risk: str               # low | medium | high
+    risk: str  # low | medium | high
 
     # Raw response for debugging
     raw_response: Optional[str] = None
@@ -85,8 +85,10 @@ class FinOpsAgent:
         """
         logger.info(
             "Calling Claude agent for %s/%s (type=%s, score=%.3f)",
-            anomaly.namespace, anomaly.deployment,
-            anomaly.anomaly_type, anomaly.anomaly_score,
+            anomaly.namespace,
+            anomaly.deployment,
+            anomaly.anomaly_type,
+            anomaly.anomaly_score,
         )
 
         user_message = self._build_user_message(metrics, anomaly)
@@ -110,12 +112,16 @@ class FinOpsAgent:
                 tool_results = []
                 for block in response.content:
                     if block.type == "tool_use":
-                        result = self._handle_tool_call(block.name, block.input, metrics)
-                        tool_results.append({
-                            "type": "tool_result",
-                            "tool_use_id": block.id,
-                            "content": json.dumps(result),
-                        })
+                        result = self._handle_tool_call(
+                            block.name, block.input, metrics
+                        )
+                        tool_results.append(
+                            {
+                                "type": "tool_result",
+                                "tool_use_id": block.id,
+                                "content": json.dumps(result),
+                            }
+                        )
                 messages.append({"role": "user", "content": tool_results})
                 continue
 
@@ -129,7 +135,8 @@ class FinOpsAgent:
 
         logger.info(
             "Recommendation for %s/%s: saving=$%.2f confidence=%.2f risk=%s",
-            anomaly.namespace, anomaly.deployment,
+            anomaly.namespace,
+            anomaly.deployment,
             recommendation.monthly_saving_usd,
             recommendation.confidence,
             recommendation.risk,
@@ -146,9 +153,9 @@ class FinOpsAgent:
         cpu_req_m = int(metrics.cpu_request_cores * 1000)
         cpu_lim_m = int(metrics.cpu_limit_cores * 1000)
         cpu_use_m = int(metrics.cpu_usage_cores * 1000)
-        mem_req_mi = int(metrics.memory_request_bytes / 1024 ** 2)
-        mem_lim_mi = int(metrics.memory_limit_bytes / 1024 ** 2)
-        mem_use_mi = int(metrics.memory_usage_bytes / 1024 ** 2)
+        mem_req_mi = int(metrics.memory_request_bytes / 1024**2)
+        mem_lim_mi = int(metrics.memory_limit_bytes / 1024**2)
+        mem_use_mi = int(metrics.memory_usage_bytes / 1024**2)
 
         return (
             "Analyze this Kubernetes resource anomaly and provide "
@@ -203,7 +210,7 @@ class FinOpsAgent:
         For demo purposes returns derived estimates from current metrics.
         """
         cpu_m = int(metrics.cpu_usage_cores * 1000)
-        mem_mi = int(metrics.memory_usage_bytes / 1024 ** 2)
+        mem_mi = int(metrics.memory_usage_bytes / 1024**2)
 
         return {
             "deployment": metrics.deployment,
@@ -240,7 +247,7 @@ class FinOpsAgent:
         hours = 730
 
         current_cpu_cost = metrics.cpu_request_cores * cpu_price * hours
-        current_mem_cost = (metrics.memory_request_bytes / 1024 ** 3) * mem_price * hours
+        current_mem_cost = (metrics.memory_request_bytes / 1024**3) * mem_price * hours
 
         proposed_cpu_m = tool_input.get("proposed_cpu_request_m", 0)
         proposed_mem_mi = tool_input.get("proposed_memory_request_mi", 0)
@@ -250,7 +257,8 @@ class FinOpsAgent:
 
         saving = max(
             0.0,
-            (current_cpu_cost + current_mem_cost) - (proposed_cpu_cost + proposed_mem_cost)
+            (current_cpu_cost + current_mem_cost)
+            - (proposed_cpu_cost + proposed_mem_cost),
         )
 
         return {
@@ -302,7 +310,9 @@ class FinOpsAgent:
             )
 
         except (json.JSONDecodeError, KeyError, ValueError) as e:
-            logger.error("Failed to parse agent response: %s\nRaw: %s", e, raw_text[:200])
+            logger.error(
+                "Failed to parse agent response: %s\nRaw: %s", e, raw_text[:200]
+            )
             return self._fallback_recommendation(metrics, anomaly)
 
     def _apply_safety_floors(
@@ -344,7 +354,7 @@ class FinOpsAgent:
     ) -> FinOpsRecommendation:
         """Conservative fallback when Claude response cannot be parsed."""
         cpu_m = max(10, int(metrics.cpu_usage_cores * 1000 * 1.5))
-        mem_mi = max(16, int(metrics.memory_usage_bytes / 1024 ** 2 * 1.5))
+        mem_mi = max(16, int(metrics.memory_usage_bytes / 1024**2 * 1.5))
 
         return FinOpsRecommendation(
             namespace=metrics.namespace,
@@ -377,9 +387,9 @@ class FinOpsAgent:
             return float(value)
         else:  # memory
             if value.endswith("Mi"):
-                return float(value[:-2]) * 1024 ** 2
+                return float(value[:-2]) * 1024**2
             if value.endswith("Gi"):
-                return float(value[:-2]) * 1024 ** 3
+                return float(value[:-2]) * 1024**3
             if value.endswith("Ki"):
                 return float(value[:-2]) * 1024
             return float(value)
@@ -390,7 +400,8 @@ class FinOpsAgent:
         if prompt_file.exists():
             content = prompt_file.read_text()
             lines = [
-                line for line in content.splitlines()
+                line
+                for line in content.splitlines()
                 if not line.startswith("#") and not line.startswith("```")
             ]
             return "\n".join(lines).strip()
@@ -414,8 +425,14 @@ class FinOpsAgent:
                 "input_schema": {
                     "type": "object",
                     "properties": {
-                        "deployment": {"type": "string", "description": "Deployment name"},
-                        "namespace": {"type": "string", "description": "Kubernetes namespace"},
+                        "deployment": {
+                            "type": "string",
+                            "description": "Deployment name",
+                        },
+                        "namespace": {
+                            "type": "string",
+                            "description": "Kubernetes namespace",
+                        },
                     },
                     "required": ["deployment", "namespace"],
                 },
@@ -447,7 +464,10 @@ class FinOpsAgent:
                             "description": "Proposed memory request in MiB",
                         },
                     },
-                    "required": ["proposed_cpu_request_m", "proposed_memory_request_mi"],
+                    "required": [
+                        "proposed_cpu_request_m",
+                        "proposed_memory_request_mi",
+                    ],
                 },
             },
             {

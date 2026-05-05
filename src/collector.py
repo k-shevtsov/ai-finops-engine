@@ -22,8 +22,8 @@ class ContainerMetrics:
     pod: str
 
     # Actual usage (from Prometheus)
-    cpu_usage_cores: float = 0.0          # current CPU usage in cores
-    memory_usage_bytes: float = 0.0       # current memory usage in bytes
+    cpu_usage_cores: float = 0.0  # current CPU usage in cores
+    memory_usage_bytes: float = 0.0  # current memory usage in bytes
 
     # Resource requests and limits (from kube_pod_container_resource_*)
     cpu_request_cores: float = 0.0
@@ -32,18 +32,18 @@ class ContainerMetrics:
     memory_limit_bytes: float = 0.0
 
     # Derived metrics (calculated by collector)
-    cpu_utilization: float = 0.0          # cpu_usage / cpu_request
-    memory_utilization: float = 0.0       # memory_usage / memory_request
-    cpu_limit_ratio: float = 0.0          # cpu_limit / cpu_request
-    memory_limit_ratio: float = 0.0       # memory_limit / memory_request
+    cpu_utilization: float = 0.0  # cpu_usage / cpu_request
+    memory_utilization: float = 0.0  # memory_usage / memory_request
+    cpu_limit_ratio: float = 0.0  # cpu_limit / cpu_request
+    memory_limit_ratio: float = 0.0  # memory_limit / memory_request
 
     # Throttling and OOM
-    cpu_throttling_rate: float = 0.0      # throttled_seconds / total_seconds
+    cpu_throttling_rate: float = 0.0  # throttled_seconds / total_seconds
     oom_events_24h: int = 0
 
     # Waste metrics
-    cpu_waste_cores: float = 0.0          # cpu_request - cpu_usage
-    memory_waste_bytes: float = 0.0       # memory_request - memory_usage
+    cpu_waste_cores: float = 0.0  # cpu_request - cpu_usage
+    memory_waste_bytes: float = 0.0  # memory_request - memory_usage
 
     collected_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -243,7 +243,9 @@ class MetricsCollector:
             namespace = metric.get("namespace", "")
             pod = metric.get("pod", "")
             # Use label_app as deployment proxy (works for most deployments)
-            app = metric.get("label_app", "") or metric.get("label_app_kubernetes_io_name", "")
+            app = metric.get("label_app", "") or metric.get(
+                "label_app_kubernetes_io_name", ""
+            )
             if namespace and pod and app:
                 mapping[f"{namespace}/{pod}"] = app
         return mapping
