@@ -1,5 +1,7 @@
 # AI FinOps Engine
 
+![banner](docs/images/readme_banner.png)
+
 > Kubernetes-native platform for automated resource waste detection and rightsizing.
 > Isolation Forest detects anomalies. Claude explains root causes. A Kubernetes Operator applies fixes automatically.
 
