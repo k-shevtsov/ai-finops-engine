@@ -1,0 +1,53 @@
+---
+# infra/helm/ai-finops-engine/templates/rbac.yaml
+# RBAC for AI FinOps Engine operator
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ai-finops-engine
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: ai-finops-engine
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ai-finops-engine
+rules:
+  # Read deployments, patch resources
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "patch"]
+  # Manage FinOpsRecommendation CRDs
+  - apiGroups: ["finops.shevtsov.xyz"]
+    resources: ["finopsrecommendations", "finopsrecommendations/status"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # VPA support (optional)
+  - apiGroups: ["autoscaling.k8s.io"]
+    resources: ["verticalpodautoscalers"]
+    verbs: ["get", "list", "create", "update", "patch"]
+  # Read pods and namespaces
+  - apiGroups: [""]
+    resources: ["pods", "namespaces"]
+    verbs: ["get", "list", "watch"]
+  # kopf leader election
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ai-finops-engine
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ai-finops-engine
+subjects:
+  - kind: ServiceAccount
+    name: ai-finops-engine
+    namespace: {{ .Release.Namespace }}

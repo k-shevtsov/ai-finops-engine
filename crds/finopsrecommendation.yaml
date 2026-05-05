@@ -1,0 +1,109 @@
+---
+# crds/finopsrecommendation.yaml
+# Custom Resource Definition for AI FinOps Engine recommendations
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: finopsrecommendations.finops.shevtsov.xyz
+spec:
+  group: finops.shevtsov.xyz
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required: [deployment, namespace, anomaly_type, severity, mode]
+              properties:
+                deployment:
+                  type: string
+                namespace:
+                  type: string
+                container:
+                  type: string
+                anomaly_type:
+                  type: string
+                  enum: [over_provisioned, under_provisioned, memory_leak, cpu_spike]
+                severity:
+                  type: string
+                  enum: [low, medium, high, critical]
+                mode:
+                  type: string
+                  enum: [AUTO, SUGGEST, MANUAL]
+                  default: SUGGEST
+                current:
+                  type: object
+                  properties:
+                    cpu_request:   {type: string}
+                    cpu_limit:     {type: string}
+                    memory_request: {type: string}
+                    memory_limit:  {type: string}
+                recommended:
+                  type: object
+                  properties:
+                    cpu_request:   {type: string}
+                    cpu_limit:     {type: string}
+                    memory_request: {type: string}
+                    memory_limit:  {type: string}
+                analysis:
+                  type: object
+                  properties:
+                    cpu_p95_actual:        {type: string}
+                    memory_p95_actual:     {type: string}
+                    cpu_utilization_avg:   {type: number}
+                    monthly_waste_usd:     {type: number}
+                    monthly_saving_usd:    {type: number}
+                    confidence:            {type: number}
+                    risk:                  {type: string}
+                    root_cause:            {type: string}
+                    explanation:           {type: string}
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  enum: [Pending, Applied, Rejected, Monitoring]
+                applied_at:
+                  type: string
+                  nullable: true
+                saving_realized_usd:
+                  type: number
+                message:
+                  type: string
+      additionalPrinterColumns:
+        - name: Deployment
+          type: string
+          jsonPath: .spec.deployment
+        - name: Type
+          type: string
+          jsonPath: .spec.anomaly_type
+        - name: Severity
+          type: string
+          jsonPath: .spec.severity
+        - name: Mode
+          type: string
+          jsonPath: .spec.mode
+        - name: Saving
+          type: number
+          jsonPath: .spec.analysis.monthly_saving_usd
+        - name: Confidence
+          type: number
+          jsonPath: .spec.analysis.confidence
+        - name: Phase
+          type: string
+          jsonPath: .status.phase
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+      subresources:
+        status: {}
+  scope: Namespaced
+  names:
+    plural: finopsrecommendations
+    singular: finopsrecommendation
+    kind: FinOpsRecommendation
+    shortNames: [finops, fr]
