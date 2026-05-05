@@ -12,7 +12,7 @@ from typing import Any, Optional
 import anthropic
 
 from src.collector import ContainerMetrics
-from src.model import AnomalyResult, AnomalyType
+from src.model import AnomalyResult
 
 logger = logging.getLogger(__name__)
 
@@ -150,36 +150,33 @@ class FinOpsAgent:
         mem_lim_mi = int(metrics.memory_limit_bytes / 1024 ** 2)
         mem_use_mi = int(metrics.memory_usage_bytes / 1024 ** 2)
 
-        return f"""Analyze this Kubernetes resource anomaly and provide a rightsizing recommendation.
-
-## Container
-- Namespace:  {metrics.namespace}
-- Deployment: {metrics.deployment}
-- Container:  {metrics.container}
-
-## Anomaly Detection
-- Type:         {anomaly.anomaly_type}
-- Severity:     {anomaly.severity}
-- Score:        {anomaly.anomaly_score:.4f} (more negative = more anomalous)
-
-## Current Resources
-- CPU request:    {cpu_req_m}m
-- CPU limit:      {cpu_lim_m}m
-- Memory request: {mem_req_mi}Mi
-- Memory limit:   {mem_lim_mi}Mi
-
-## Actual Usage (current)
-- CPU usage:    {cpu_use_m}m  ({anomaly.cpu_utilization:.1%} of request)
-- Memory usage: {mem_use_mi}Mi ({anomaly.memory_utilization:.1%} of request)
-
-## Additional Signals
-- CPU throttling rate: {anomaly.cpu_throttling_rate:.1%}
-- OOM events (24h):    {anomaly.oom_events_24h}
-- CPU limit ratio:     {anomaly.cpu_limit_ratio:.1f}x (limit/request)
-- Memory limit ratio:  {anomaly.memory_limit_ratio:.1f}x (limit/request)
-
-Use the available tools to get historical usage data before making your recommendation.
-"""
+        return (
+            "Analyze this Kubernetes resource anomaly and provide "
+            f"a rightsizing recommendation.\n\n"
+            f"## Container\n"
+            f"- Namespace:  {metrics.namespace}\n"
+            f"- Deployment: {metrics.deployment}\n"
+            f"- Container:  {metrics.container}\n\n"
+            f"## Anomaly Detection\n"
+            f"- Type:         {anomaly.anomaly_type}\n"
+            f"- Severity:     {anomaly.severity}\n"
+            f"- Score:        {anomaly.anomaly_score:.4f} (more negative = more anomalous)\n\n"
+            f"## Current Resources\n"
+            f"- CPU request:    {cpu_req_m}m\n"
+            f"- CPU limit:      {cpu_lim_m}m\n"
+            f"- Memory request: {mem_req_mi}Mi\n"
+            f"- Memory limit:   {mem_lim_mi}Mi\n\n"
+            f"## Actual Usage (current)\n"
+            f"- CPU usage:    {cpu_use_m}m  ({anomaly.cpu_utilization:.1%} of request)\n"
+            f"- Memory usage: {mem_use_mi}Mi ({anomaly.memory_utilization:.1%} of request)\n\n"
+            f"## Additional Signals\n"
+            f"- CPU throttling rate: {anomaly.cpu_throttling_rate:.1%}\n"
+            f"- OOM events (24h):    {anomaly.oom_events_24h}\n"
+            f"- CPU limit ratio:     {anomaly.cpu_limit_ratio:.1f}x (limit/request)\n"
+            f"- Memory limit ratio:  {anomaly.memory_limit_ratio:.1f}x (limit/request)\n\n"
+            "Use the available tools to get historical usage data"
+            " before making your recommendation."
+        )
 
     def _handle_tool_call(
         self,
@@ -245,14 +242,16 @@ Use the available tools to get historical usage data before making your recommen
         current_cpu_cost = metrics.cpu_request_cores * cpu_price * hours
         current_mem_cost = (metrics.memory_request_bytes / 1024 ** 3) * mem_price * hours
 
-        # Parse proposed values from tool input if provided
         proposed_cpu_m = tool_input.get("proposed_cpu_request_m", 0)
         proposed_mem_mi = tool_input.get("proposed_memory_request_mi", 0)
 
         proposed_cpu_cost = (proposed_cpu_m / 1000) * cpu_price * hours
         proposed_mem_cost = (proposed_mem_mi / 1024) * mem_price * hours
 
-        saving = max(0.0, (current_cpu_cost + current_mem_cost) - (proposed_cpu_cost + proposed_mem_cost))
+        saving = max(
+            0.0,
+            (current_cpu_cost + current_mem_cost) - (proposed_cpu_cost + proposed_mem_cost)
+        )
 
         return {
             "current_monthly_usd": round(current_cpu_cost + current_mem_cost, 2),
@@ -312,10 +311,7 @@ Use the available tools to get historical usage data before making your recommen
         metrics: ContainerMetrics,
     ) -> FinOpsRecommendation:
         """Enforce minimum resource values and risk escalation rules."""
-        # Parse current limits for comparison
         cpu_lim_current = metrics.cpu_limit_cores
-
-        # Parse recommended CPU limit
         cpu_lim_rec = self._parse_resource_value(rec.cpu_limit, "cpu")
 
         # If recommendation reduces limit by > 50% → escalate risk
@@ -393,14 +389,12 @@ Use the available tools to get historical usage data before making your recommen
         prompt_file = PROMPTS_DIR / "finops_agent_v1.md"
         if prompt_file.exists():
             content = prompt_file.read_text()
-            # Strip markdown headers and code fences — return plain text
             lines = [
                 line for line in content.splitlines()
                 if not line.startswith("#") and not line.startswith("```")
             ]
             return "\n".join(lines).strip()
 
-        # Inline fallback if file not found
         return (
             "You are a Kubernetes FinOps expert. Analyze resource utilization anomalies "
             "and provide specific rightsizing recommendations. "
