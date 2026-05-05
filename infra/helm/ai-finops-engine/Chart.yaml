@@ -1,0 +1,17 @@
+---
+# infra/helm/ai-finops-engine/Chart.yaml
+apiVersion: v2
+name: ai-finops-engine
+description: Kubernetes-native AI FinOps platform for automated resource optimization
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - finops
+  - kubernetes
+  - ai
+  - resource-optimization
+  - cost-optimization
+maintainers:
+  - name: Kostiantyn Shevtsov
+    url: https://shevtsov.xyz

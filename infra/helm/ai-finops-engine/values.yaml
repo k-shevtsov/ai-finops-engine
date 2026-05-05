@@ -1,0 +1,70 @@
+# infra/helm/ai-finops-engine/values.yaml
+replicaCount: 1
+
+image:
+  repository: ghcr.io/k-shevtsov/ai-finops-engine
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+# Operator configuration
+operator:
+  mode: SUGGEST          # AUTO | SUGGEST | MANUAL
+  dryRun: true           # set to false for real changes
+  scrapeIntervalSeconds: 60
+  confidenceThreshold: 0.85
+  minSavingUsdForAuto: 5.0
+  excludedNamespaces: "kube-system,monitoring,argocd"
+  maxRecommendationsPerHour: 10
+
+# Thresholds
+thresholds:
+  cpuWaste: 0.15
+  memoryWaste: 0.20
+
+# Cost calculation (approximate AWS us-east-1 on-demand)
+costs:
+  cpuPricePerCoreHour: 0.048
+  memoryPricePerGbHour: 0.006
+
+# Prometheus
+prometheus:
+  url: "http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090"
+
+# Claude AI
+claude:
+  model: "claude-haiku-4-5"
+  existingSecret: "ai-finops-engine-secrets"
+  secretKey: "anthropic-api-key"
+
+# Telegram
+telegram:
+  existingSecret: "ai-finops-engine-secrets"
+  tokenKey: "telegram-token"
+  chatIdKey: "telegram-chat-id"
+
+# Langfuse
+langfuse:
+  host: "https://cloud.langfuse.com"
+  existingSecret: "ai-finops-engine-secrets"
+  publicKeyKey: "langfuse-public-key"
+  secretKeyKey: "langfuse-secret-key"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+serviceAccount:
+  create: true
+  name: "ai-finops-engine"
+
+service:
+  type: ClusterIP
+  port: 8080    # metrics endpoint
+
+serviceMonitor:
+  enabled: true
+  interval: 30s

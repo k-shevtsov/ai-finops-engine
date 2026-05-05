@@ -59,12 +59,14 @@ install: ## Create venv and install dependencies
 # ─── Tests ────────────────────────────────────────────────────────────────────
 test: ## Run unit tests (no API calls, no cluster required)
 	@echo -e "$(GREEN)[make test]$(NC) Running unit tests..."
-	$(VENV)/bin/pytest tests/ -m "not integration" $(ARGS)
+	$(VENV)/bin/pytest tests/ -m "not integration" \
+		--ignore=tests/test_integration.py \
+		--cov=src --cov-report=term-missing --cov-fail-under=80 $(ARGS)
 
 test-int: ## Run integration tests (requires ANTHROPIC_API_KEY + k3d)
 	@echo -e "$(YELLOW)[make test-int]$(NC) Running integration tests..."
 	@test -n "$$ANTHROPIC_API_KEY" || (echo "❌ ANTHROPIC_API_KEY not set" && exit 1)
-	$(VENV)/bin/pytest tests/ -m "integration" -v $(ARGS)
+	$(VENV)/bin/pytest tests/test_integration.py -m "integration" -v $(ARGS)
 
 test-cov: ## Run tests with HTML coverage report
 	$(VENV)/bin/pytest tests/ -m "not integration" \
