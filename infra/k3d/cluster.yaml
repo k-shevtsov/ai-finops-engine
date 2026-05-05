@@ -1,0 +1,30 @@
+---
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+
+metadata:
+  name: finops
+
+servers: 1
+agents: 2
+
+ports:
+  - port: 9090:9090
+    nodeFilters:
+      - loadbalancer
+  - port: 3001:3000
+    nodeFilters:
+      - loadbalancer
+
+options:
+  k3d:
+    wait: true
+    timeout: "120s"
+  k3s:
+    extraArgs:
+      - arg: --disable=traefik
+        nodeFilters:
+          - server:*
+  kubeconfig:
+    updateDefaultKubeconfig: true
+    switchCurrentContext: true
